@@ -438,15 +438,18 @@
   const insideBar = $('[data-inside-bar]');
   let inP = reduced ? 1 : 0, inOn = reduced;
 
+  let zk = 1; // depth spacing multiplier: photos sit further apart on phones so they don't overlap
   function layoutPlanes() {
     const vw = window.innerWidth / 100, vh = window.innerHeight / 100;
     const small = isSmall();
+    zk = small ? 1.6 : 1;
     planes.forEach((p) => {
-      const w = (small ? Math.min(p.w * 2.1, 82) : p.w) * vw;
-      const x = (small ? p.x * 0.55 : p.x) * vw;
-      const y = p.y * vh * (small ? 0.8 : 1);
+      const w = (small ? Math.min(p.w * 1.8, 68) : p.w) * vw;
+      const x = (small ? p.x * 0.45 : p.x) * vw;
+      // on phones keep photos in the upper-middle, clear of the headline at the bottom
+      const y = small ? (p.y * 0.4 - 12) * vh : p.y * vh;
       p.el.style.width = w + 'px';
-      p.base = `translate3d(${x}px, ${y}px, ${-p.z}px) translate(-50%, -50%) rotateY(${p.r}deg)`;
+      p.base = `translate3d(${x}px, ${y}px, ${-p.z * zk}px) translate(-50%, -50%) rotateY(${p.r}deg)`;
       p.el.style.transform = p.base;
     });
   }
@@ -462,11 +465,11 @@
   }
   const renderInside = () => {
     const p = gsap.parseEase('power1.inOut')(inP);
-    const cam = p * (maxZ - 230);
+    const cam = p * (maxZ * zk - 230);
     world.style.transform =
       `translateZ(${cam}px) rotateX(${pointer.sy * 3}deg) rotateY(${pointer.sx * -5}deg)`;
     for (const pl of planes) {
-      const d = pl.z - cam; // distance ahead of the camera
+      const d = pl.z * zk - cam; // distance ahead of the camera
       const far = pl.door ? clamp((2600 - d) / 900) : clamp((1700 - d) / 650);
       const near = pl.door ? 1 : clamp((d - 40) / 280);
       pl.el.style.opacity = (far * near).toFixed(3);
