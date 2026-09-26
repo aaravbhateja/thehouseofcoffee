@@ -163,15 +163,19 @@
      Nav
      ------------------------------------------------------------------ */
   const nav = $('[data-nav]');
-  let lastY = 0;
+  let lastY = 0, travel = 0;
   ScrollTrigger.create({
     start: 0, end: 'max',
     onUpdate: (self) => {
       const y = self.scroll();
       nav.classList.toggle('is-solid', y > 40);
-      nav.classList.toggle('is-hidden', y > 400 && y > lastY + 2);
-      if (y < lastY - 2) nav.classList.remove('is-hidden');
+      const dy = y - lastY;
       lastY = y;
+      // accumulate travel in one direction so slow-scroll jitter can't flip the nav
+      travel = Math.sign(dy) === Math.sign(travel) ? travel + dy : dy;
+      if (y <= 400) { nav.classList.remove('is-hidden'); return; }
+      if (travel > 80) nav.classList.add('is-hidden');
+      else if (travel < -80) nav.classList.remove('is-hidden');
     },
   });
 
